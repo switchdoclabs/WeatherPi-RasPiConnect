@@ -1,0 +1,6 @@
+*.pyc
+tx*
+.*.swp
+*.temp
+*.test
+nohup.out
