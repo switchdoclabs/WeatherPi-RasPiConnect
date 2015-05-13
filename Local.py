@@ -19,7 +19,10 @@ import time
 import Config
 import Validate
 import BuildResponse 
-from time import gmtime, strftime
+#from time import gmtime, strftime
+
+import MySQLdb as mdb
+
 #
 #
 # Command to WeatherPiSolarPowerecWeatherStation procdures
@@ -270,7 +273,23 @@ def ExecuteUserObjects(objectType, element):
 
 		elif (lowername == "voltage graph"):
 
+			responseData = "system logs"
+			responseData = responseData.title()	
+               		f = open("./local/GraphSelect.txt", "w")
+               		f.write(lowername)
+               		f.close()
+		
+		elif (lowername == "system logs"):
+
 			responseData = "current graph"
+			responseData = responseData.title()	
+               		f = open("./local/GraphSelect.txt", "w")
+               		f.write(lowername)
+               		f.close()
+
+		elif (lowername == "current graphs"):
+
+			responseData = "wind graph"
 			responseData = responseData.title()	
                		f = open("./local/GraphSelect.txt", "w")
                		f.write(lowername)
@@ -339,6 +358,74 @@ def ExecuteUserObjects(objectType, element):
 		elif (lowername == "temp / hum graph"):
 
 			imageName = "TemperatureHumidityGraph.png"
+		
+		elif (lowername == "system logs"):
+
+				# grab the system logs
+				with open ("./Templates/W-16-SL.html", "r") as myfile:
+					import time
+					responseData = "System Time: "
+					responseData +=  time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+					responseData += "<BR>\n"
+    					responseData += myfile.read().replace('\n', '')
+		
+		        	try:
+                			print("trying database")
+					DATABASEPASSWORD = "rmysqlpassword"
+                			db = mdb.connect('localhost', 'root', DATABASEPASSWORD, 'WeatherPi');
+		
+                			cursor = db.cursor()
+
+
+					query = "SELECT TimeStamp, Level, Source, Message FROM systemlog ORDER BY ID DESC LIMIT 30"
+                			cursor.execute(query)
+
+					rows = cursor.fetchall()
+					CRITICAL=50
+					ERROR=40
+					WARNING=30
+					INFO=20
+					DEBUG=10
+					NOTSET=0
+
+					for row in rows:
+						level = row[1]	
+						levelName = "NONE"
+						if (level == DEBUG):
+							levelName = "DEBUG"
+						if (level == INFO):
+							levelName = "INFO"
+						if (level == WARNING):
+							levelName = "WARNING"
+						if (level == ERROR):
+							levelName = "ERROR"
+						if (level == CRITICAL):
+							levelName = "CRITICAL"
+
+						logline = "%s:%s:%s:%s" % (row[0], levelName, row[2], row[3] )
+						line = logline+"<BR>\n<!--INSERTLOGS-->"	
+
+						responseData = responseData.replace("<!--INSERTLOGS-->", line)	
+
+
+
+        			except mdb.Error, e:
+		
+                			print "Error %d: %s" % (e.args[0],e.args[1])
+
+        			finally:
+		
+                			cursor.close()
+                			db.close()
+			
+                			del cursor
+                			del db
+		
+                		outgoingXMLData += BuildResponse.buildResponse(responseData)
+                		outgoingXMLData += BuildResponse.buildFooter()
+                		return outgoingXMLData
+
+
 
 		else:
 			imageName = "PowerVoltageGraph.png"

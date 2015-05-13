@@ -1,1 +1,1 @@
-voltage graph
+system logs
