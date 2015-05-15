@@ -19,7 +19,7 @@ import time
 import Config
 import Validate
 import BuildResponse 
-#from time import gmtime, strftime
+from time import gmtime, strftime
 
 import MySQLdb as mdb
 
@@ -434,13 +434,16 @@ def ExecuteUserObjects(objectType, element):
 
               	responseData = "<html><head>"
                 responseData += "<title></title><style>body,html,iframe{margin:0;padding:0;}</style>"
-		responseData += "<META HTTP-EQUIV='CACHE-CONTROL' CONTENT='NO-CACHE'>"
+		responseData += "<META HTTP-EQUIV='CACHE-CONTROL' CONTENT='NO-CACHE, MUST-REVALIDATE'>"
+		responseData += "<META HTTP-EQUIV='PRAGMA' CONTENT='NO-CACHE'>"
                 responseData += "</head>"
-
                	responseData += "<body><img src=\""
                	responseData += Config.localURL()
                	responseData += "static/"
-               	responseData += imageName
+		import random
+		answer = random.randrange(0,100,1)
+
+               	responseData += imageName + "?x" + str(answer )
                	responseData += "\" type=\"jpg\" width=\"730\" height=\"300\">"
 
                	responseData +="</body>"
